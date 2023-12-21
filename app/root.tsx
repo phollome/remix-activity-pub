@@ -1,5 +1,9 @@
 import { cssBundleHref } from "@remix-run/css-bundle";
-import type { LinksFunction } from "@remix-run/node";
+import {
+  json,
+  type LinksFunction,
+  type LoaderFunctionArgs,
+} from "@remix-run/node";
 import {
   Links,
   LiveReload,
@@ -7,13 +11,27 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
 } from "@remix-run/react";
+import config from "./config";
+
+export async function loader(_args: LoaderFunctionArgs) {
+  return json({ config: { baseURL: config.get("app.baseURL") } });
+}
+
+export type RootOutletContext = {
+  config: {
+    baseURL: string;
+  };
+};
 
 export const links: LinksFunction = () => [
   ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : []),
 ];
 
 export default function App() {
+  const loaderData = useLoaderData<typeof loader>();
+
   return (
     <html lang="en">
       <head>
@@ -23,7 +41,9 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Outlet />
+        <Outlet
+          context={{ config: loaderData.config } satisfies RootOutletContext}
+        />
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
