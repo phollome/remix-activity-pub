@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "@remix-run/dev": "^2.4.0",
+    "@remix-run/v1-route-convention": "^0.1.4",
     "@types/convict": "^6.1.6",
     "@types/convict-format-with-validator": "^6.0.5",
     "@types/react": "^18.2.20",
