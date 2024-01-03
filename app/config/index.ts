@@ -6,6 +6,8 @@ convict.addFormat(configFormatWithValidator.url);
 
 dotenv.config({ path: ".env" });
 
+console.log(process.env.BASE_URL);
+
 const schema = {
   database: {
     url: {
@@ -19,13 +21,15 @@ const schema = {
     baseURL: {
       doc: "Base URL",
       format: "url",
-      default: "",
-      env: "BASE_URL",
+      default: "http://localhost:3000",
+      env: "APP_BASE_URL",
     },
   },
 };
 
 const config = convict(schema);
+
+console.log(config.get("app.baseURL"));
 
 config.validate({ allowed: "strict" });
 

@@ -11,7 +11,7 @@ export async function loader(args: LoaderFunctionArgs) {
   if (resource === null) {
     return json(
       {
-        error: "invalid_resource",
+        error: "Invalid resource format",
         error_description: "The resource parameter is missing.",
       },
       { status: 400 }
@@ -29,7 +29,7 @@ export async function loader(args: LoaderFunctionArgs) {
     if (domain !== baseURL.hostname) {
       return json(
         {
-          error: "invalid_resource",
+          error: "Invalid resource format",
           error_description:
             "The resource parameter is invalid. The domain does not match.",
         },
@@ -43,17 +43,24 @@ export async function loader(args: LoaderFunctionArgs) {
     if (user === null) {
       return json(
         {
-          subject: resource,
-          links: [],
+          error: "Resource not found",
+          error_description: "No Resource for given parameters found.",
         },
-        { headers: { "Content-Type": "application/jrd+json" } }
+        { status: 404 }
       );
+      // return json(
+      //   {
+      //     subject: resource,
+      //     links: [],
+      //   },
+      //   { headers: { "Content-Type": "application/jrd+json" } }
+      // );
     }
   }
 
   return json(
     {
-      error: "invalid_resource",
+      error: "Invalid resource format",
       error_description: "The resource parameter has the wrong format.",
     },
     { status: 400 }
