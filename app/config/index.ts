@@ -4,9 +4,7 @@ import dotenv from "dotenv";
 
 convict.addFormat(configFormatWithValidator.url);
 
-dotenv.config({ path: ".env" });
-
-console.log(process.env.BASE_URL);
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 const schema = {
   database: {
@@ -28,8 +26,6 @@ const schema = {
 };
 
 const config = convict(schema);
-
-console.log(config.get("app.baseURL"));
 
 config.validate({ allowed: "strict" });
 

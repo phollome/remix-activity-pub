@@ -1,5 +1,6 @@
 import { type LoaderFunctionArgs, json } from "@remix-run/node";
 import config from "~/config";
+import { getDbClient } from "~/db.server";
 
 export async function loader(args: LoaderFunctionArgs) {
   const { request } = args;
@@ -37,8 +38,13 @@ export async function loader(args: LoaderFunctionArgs) {
       );
     }
 
-    // TODO: search for user
-    const user = null;
+    // get the user
+    const dbClient = getDbClient();
+    const user = await dbClient.user.findFirst({
+      where: {
+        username,
+      },
+    });
 
     if (user === null) {
       return json(
@@ -48,14 +54,17 @@ export async function loader(args: LoaderFunctionArgs) {
         },
         { status: 404 }
       );
-      // return json(
-      //   {
-      //     subject: resource,
-      //     links: [],
-      //   },
-      //   { headers: { "Content-Type": "application/jrd+json" } }
-      // );
     }
+    return json({
+      subject: resource,
+      links: [
+        {
+          rel: "self",
+          type: "application/activity+json",
+          href: `${baseURL.origin}/users/${username}`,
+        },
+      ],
+    });
   }
 
   return json(

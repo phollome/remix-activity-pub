@@ -1,10 +1,33 @@
-import { test, expect } from "vitest";
+import { test, expect, beforeAll, afterAll } from "vitest";
 import { loader } from "./webfinger";
 import config from "~/config";
-import { randUserName } from "@ngneat/falso";
+import { randUserName, randEmail, randPassword } from "@ngneat/falso";
+import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
+import { getDbClient } from "~/db.server";
 
 const baseURL = config.get("app.baseURL");
-const username = randUserName();
+const username = randUserName({ withAccents: false }).toLowerCase();
+const email = randEmail();
+const password = bcrypt.hashSync(randPassword(), 10);
+
+let dbClient: PrismaClient;
+
+beforeAll(async () => {
+  dbClient = getDbClient();
+  await dbClient.user.create({
+    data: {
+      username,
+      email,
+      password,
+    },
+  });
+});
+
+afterAll(async () => {
+  await dbClient.user.deleteMany();
+  await dbClient.$disconnect();
+});
 
 test("no resource", async () => {
   const request = new Request(`${baseURL}/.well-known/webfinger`);
@@ -64,4 +87,26 @@ test("empty user return", async () => {
   expect(body.error_description).toBe(
     "No Resource for given parameters found."
   );
+});
+
+test("user return", async () => {
+  const request = new Request(
+    `${baseURL}/.well-known/webfinger?resource=acct:${username}@localhost`
+  );
+  const response = await loader({ request, params: {}, context: {} });
+  expect(response.status).toBe(200);
+  const body = (await response.json()) as {
+    subject: string;
+    links: {
+      rel: string;
+      type: string;
+      href: string;
+    }[];
+  };
+
+  expect(body.subject).toBe(`acct:${username}@localhost`);
+  expect(body.links.length).toBe(1);
+  expect(body.links[0].rel).toBe("self");
+  expect(body.links[0].type).toBe("application/activity+json");
+  expect(body.links[0].href).toBe(`${baseURL}/users/${username}`);
 });
